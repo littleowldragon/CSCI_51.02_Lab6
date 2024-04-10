@@ -7,6 +7,7 @@
 
 int main()
 {
+    
     pid_t pid = fork();
 
     if (pid < 0)
@@ -24,18 +25,18 @@ int main()
     {
         // Parent process
         int count = 0;
+        int repetition = 0;
         while (true)
         {
-            time_t now = time(0);
-            tm *local_time = localtime(&now);
-            char time_str[100];
-            strftime(time_str, sizeof(time_str), "[%Y-%m-%d] %H:%M:%S", local_time);
-            std::cout << time_str << std::endl;
+                        auto now = std::chrono::system_clock::now();
+            auto time = std::chrono::system_clock::to_time_t(now);
+            std:tm localtime = *std::localtime(&time);
 
-            if (++count % 3 == 0)
-            {
+            std::cout << std::put_time(&localtime, "[%Y-%m-%d] %T") << std::endl;
+            repetition++;
+            if(repetition == 3) {
                 std::cout << "\"This program has gone on for far too long. Type Ctrl+C to abort this timer application.\"" << std::endl;
-            }
+                repetition = 0;
 
             sleep(10);
         }
