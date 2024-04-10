@@ -1,35 +1,45 @@
 #include <iostream>
-#include <cstdlib>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <ctime>
-#include <iomanip>
-#include <chrono>
-using namespace std;
+#include <cstdio>
 
-int main (int argc, char* argv[]) {
-    int repetition = 0;
+int main()
+{
+    pid_t pid = fork();
 
-    if(fork() == 0) {
-        cout << "Child ID: " << getpid() << endl;
-
-        if(execl("/usr/bin/xclock", "myXclock", NULL) == -1) {
-            cout << "Error" << endl; //error
-        }
+    if (pid < 0)
+    {
+        std::cerr << "Failed to fork process." << std::endl;
+        return 1;
     }
-    else {
-        while(true) {
-            auto now = std::chrono::system_clock::now();
-            auto time = std::chrono::system_clock::to_time_t(now);
-            std:tm localtime = *std::localtime(&time);
 
-            std::cout << std::put_time(&localtime, "[%Y-%m-%d] %T") << std::endl;
-            repetition++;
-            if(repetition == 3) {
+    if (pid == 0)
+    {
+        // Child process
+        execl("/usr/bin/xclock", "myXclock", NULL);
+    }
+    else
+    {
+        // Parent process
+        int count = 0;
+        while (true)
+        {
+            time_t now = time(0);
+            tm *local_time = localtime(&now);
+            char time_str[100];
+            strftime(time_str, sizeof(time_str), "[%Y-%m-%d] %H:%M:%S", local_time);
+            std::cout << time_str << std::endl;
+
+            if (++count % 3 == 0)
+            {
                 std::cout << "\"This program has gone on for far too long. Type Ctrl+C to abort this timer application.\"" << std::endl;
-                repetition = 0;
             }
+
             sleep(10);
         }
     }
+
     return 0;
 }
